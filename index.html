@@ -380,11 +380,10 @@ function fwSpawn(count){
   spawnQueue += count;
 }
 function fwLoop(){
-  if(fwActive){
-    if(spawnQueue>0){ parts.push(makeBurst()); spawnQueue--; update(); }
-    if(Math.random()<0.04 && parts.length<30) parts.push(makeBurst());
-    update();
-  }
+  if(!fwActive) return;   // 已停止：不再继续调度（避免和跑道动画双重 RAF 并行）
+  if(spawnQueue>0){ parts.push(makeBurst()); spawnQueue--; update(); }
+  if(Math.random()<0.04 && parts.length<30) parts.push(makeBurst());
+  update();
   requestAnimationFrame(fwLoop);
 }
 function makeBurst(){
@@ -487,7 +486,10 @@ function startRun(){
   elapsed=0; playing=true;
   el.btnPause.textContent="⏸";
   prevTs=performance.now();
-  if(animId==null){ animId=requestAnimationFrame(loop); }
+  // 启动跑道动画：先取消可能残留的旧帧，再同步执行第一帧（loop 内部会自行 requestAnimationFrame 续命）
+  // 用“同步 loop() 踢一帧”的方式（与点步进按钮 setFrac 的成功路径完全一致），规避手机 RAF 首次不调度问题
+  if(animId!=null){ cancelAnimationFrame(animId); animId=null; }
+  loop(performance.now());
 }
 function loop(now){
   var dt = now - prevTs;
