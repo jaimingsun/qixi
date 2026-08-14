@@ -18,9 +18,10 @@
     text-shadow:0 8px 40px rgba(255,120,160,.4); }
   @media(min-width:480px){ #cover .title{ font-size:90px; } }
   #cover .sub { margin-top:8px; color:#ffd0e0; font-size:14px; letter-spacing:.3em; opacity:.85; }
-  #cover .enter { margin-top:44px; padding:14px 52px; border-radius:40px; border:1px solid rgba(255,255,255,.4);
-    background:rgba(255,255,255,.06); color:#fff; font-size:17px; letter-spacing:.2em; cursor:pointer;
-    backdrop-filter:blur(6px); transition:all .3s; user-select:none; }
+  #cover .enter { margin-top:30px; padding:22px 72px; border-radius:50px; border:1px solid rgba(255,255,255,.5);
+    background:linear-gradient(135deg,rgba(255,107,157,.35),rgba(255,214,110,.25)); color:#fff; font-size:24px; letter-spacing:.25em; cursor:pointer;
+    backdrop-filter:blur(8px); transition:all .3s; user-select:none; font-weight:700;
+    box-shadow:0 10px 40px rgba(255,120,160,.35); }
   #cover .enter:active { transform:scale(.95); background:rgba(255,255,255,.18); }
   #cover .hint { position:absolute; bottom:30px; color:rgba(255,255,255,.4); font-size:12px; letter-spacing:.15em; }
 
@@ -30,8 +31,12 @@
   /* ===== 操场主场景 ===== */
   #stage { position:absolute; inset:0; z-index:10; display:none; overflow:hidden; }
   /* 背景阶段纯色 */
-  #bg { position:absolute; inset:0; transition:background 2s ease; }
-  #bgStage { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; }
+  #bg { position:absolute; inset:0; background:#0b0b14; }  /* 底色 */
+  #bgSlide { position:absolute; top:0; left:0; right:0; height:60%; }  /* 自然风光只占上方 60%，下方留给跑道 */
+  #bgSlide .slide { position:absolute; inset:0; background-position:center 30%; background-size:cover;
+    opacity:0; transition:opacity 2.5s ease; }
+  #bgSlide .slide.on { opacity:1; }
+  #bgStage { position:absolute; top:0; left:0; right:0; height:60%; z-index:2; display:flex; align-items:center; justify-content:center; }
   #bgStage.phaseText { display:none; }
   #phaseText { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; pointer-events:none; }
   #phaseLabel { font-size:10vw; font-weight:800; color:#fff; letter-spacing:.15em; opacity:.9;
@@ -39,20 +44,20 @@
   @media(min-width:480px){ #phaseLabel{ font-size:52px; } }
   #phaseSub { font-size:.32em; font-weight:400; letter-spacing:.3em; opacity:.7; margin-top:10px; color:#fff; text-shadow:0 4px 20px rgba(0,0,0,.4); }
 
-  /* 操场地面 + 跑道 */
-  #ground { position:absolute; left:0; right:0; bottom:0; height:62%; }
-  #grass { position:absolute; left:0; right:0; bottom:0; height:16%; background:linear-gradient(180deg,#2f9e44,#1f7a32); }
-  #track { position:absolute; left:0; right:0; bottom:14%; height:30%;
-    background:repeating-linear-gradient(90deg,#c0392b 0 60px,#fff 60px 66px,#c0392b 66px 130px,#e8e8e8 130px 134px,#c0392b 134px 200px,#d7d7d7 200px 204px,#c0392b 204px 270px,#fff 270px 276px,#c0392b 276px 340px,#e0e0e0 340px 344px,#c0392b 344px 410px);
-    border-top:4px solid #fff; border-bottom:4px solid #aaa; box-shadow:inset 0 -8px 18px rgba(0,0,0,.25); }
+  /* 操场地面 + 跑道（占下方 40%，与上方自然风光严格上下分区） */
+  #ground { position:absolute; left:0; right:0; bottom:0; height:40%; }
+  #grass { display:none; }  /* 已由真实跑道图替换，不再需要 */
+  /* 真实塑胶田径跑道：铺满整个下方 40%，顶部与上方自然风光无缝衔接 */
+  #track { position:absolute; inset:0;
+    background:url('https://images.unsplash.com/photo-1502904550040-7534597429ae?auto=format&fit=crop&w=1400&q=80') center/100% 100% no-repeat; }
   /* 跑道横向移动层 */
-  #runLayer { position:absolute; left:0; right:0; bottom:14%; height:30%; will-change:transform; }
+  #runLayer { position:absolute; left:0; right:0; bottom:12%; height:44%; will-change:transform; }
 
   /* 跑道上的照片 */
   .ph { position:absolute; bottom:0; width:150px; will-change:transform;
     background:#fff; border-radius:10px; padding:8px 8px 6px; box-shadow:0 10px 24px rgba(0,0,0,.35);
     transform-origin:50% 100%; }
-  .ph .img { width:100%; height:112px; border-radius:6px; background:#eee center/cover no-repeat; }
+  .ph .img { width:100%; aspect-ratio:4/3; border-radius:6px; background:#eee center/cover no-repeat; }
   .ph .cap { margin-top:6px; text-align:center; font-size:11px; color:#333; line-height:1.4; }
   .ph .cap b { display:block; font-size:10px; color:#c0392b; letter-spacing:.05em; }
   .ph .cap span { font-size:9px; color:#666; }
@@ -97,6 +102,12 @@
     border-radius:6px; padding:4px 8px; font-size:11px; cursor:pointer; white-space:nowrap; }
   .eitem .upTip { font-size:10px; color:rgba(255,255,255,.35); }
   .panelHint { color:rgba(255,255,255,.45); font-size:11px; line-height:1.6; margin:-4px 0 12px; }
+  .musicBar { display:flex; align-items:center; gap:8px; margin-bottom:12px; padding:8px 10px;
+    background:#1c1c2e; border-radius:8px; }
+  .musicLabel { color:#fff; font-size:12px; flex:1; }
+  .musicBar button { background:rgba(255,107,157,.18); color:#ff9db9; border:1px dashed rgba(255,107,157,.5);
+    border-radius:6px; padding:5px 12px; font-size:12px; cursor:pointer; }
+  .musicStatus { color:rgba(255,255,255,.5); font-size:10px; max-width:80px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   #saveBtn { margin-top:12px; padding:13px; border:none; border-radius:10px; cursor:pointer;
     background:linear-gradient(90deg,#ff6b9d,#ff9d5c); color:#fff; font-size:16px; font-weight:700; letter-spacing:.12em; }
   #photoEditBtn { position:absolute; right:14px; bottom:90px; z-index:25; background:rgba(0,0,0,.6); color:#fff;
@@ -120,6 +131,7 @@
   <!-- 主场景 -->
   <div id="stage">
     <div id="bg">
+      <div id="bgSlide"></div>
       <div id="bgStage"><div id="phaseText"><div id="phaseLabel">相识</div><div id="phaseSub">缘分的开始</div></div></div>
     </div>
     <div id="miniStage">❤ 我们的故事</div>
@@ -137,6 +149,7 @@
         <div class="ctrlBtn" id="btnPrev">◀</div>
         <div class="ctrlBtn" id="btnPause">⏸</div>
         <div class="ctrlBtn" id="btnNext">▶</div>
+        <div class="ctrlBtn" id="btnMusic" title="音乐开关">🎵</div>
         <div id="progress"><div id="barFill"></div></div>
         <div id="timeTxt">0 / 30</div>
       </div>
@@ -147,6 +160,12 @@
   <div id="editPanel">
     <div class="head"><h3>编辑照片</h3><span class="close" id="panelClose">关闭</span></div>
     <div class="panelHint">①点击「📷上传」可从相册选择这张照片（保存在本机，刷新不丢）<br>②填写日期和地点后点「保存」</div>
+    <div class="musicBar">
+      <span class="musicLabel">🎵 背景音乐：</span>
+      <button id="musicUploadBtn">上传</button>
+      <input type="file" id="musicFile" accept="audio/*,.mp3,.m4a,.aac,.wav,.ogg" style="display:none">
+      <span class="musicStatus" id="musicStatus">未上传</span>
+    </div>
     <div id="editList"></div>
     <button id="saveBtn">保存</button>
   </div>
@@ -210,7 +229,19 @@ try{
   if(simg && typeof simg==="object"){ SAVED_IMGS = simg; }
 }catch(e){}
 
-/* 阶段背景（纯色 + 标题字），按顺序过渡 */
+/* 方案A扩展：手机上传的背景音乐（base64 存 localStorage key: qixi_music），优先于默认内置音乐 */
+var SAVED_MUSIC = null;   // "data:audio/...;base64,..."（手机上传，优先）
+try{
+  SAVED_MUSIC = localStorage.getItem("qixi_music")||null;
+}catch(e){}
+
+/* 默认内置背景音乐：同源文件 music/bg.mp3（与页面一起部署，页面能打开它就能播）
+   只要有人在页面里上传过音乐，就以手机上传的为准（SAVED_MUSIC 优先）。 */
+var DEFAULT_MUSIC_URL = "music/bg.mp3";
+
+/* =========================================================
+   阶段背景文字（只用于显示文字，不控制背景）
+   ========================================================= */
 var PHASES = [
   { name:"相识", sub:"缘分的开始",  color:"linear-gradient(180deg,#6a2c70,#b23e6e)" },
   { name:"相知", sub:"慢慢靠近你",  color:"linear-gradient(180deg,#2c4a8a,#6a70c9)" },
@@ -220,15 +251,30 @@ var PHASES = [
   { name:"我们有宝宝啦", sub:"爱的小家", color:"linear-gradient(180deg,#f2c94c,#f2994a)" }
 ];
 
+/* 自然风光背景轮播图（一路变换，不管阶段；Unsplash 免费图床直链） */
+var NATURE_BGS = [
+  "https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=1600&q=75",
+  "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?auto=format&fit=crop&w=1600&q=75",
+  "https://images.unsplash.com/photo-1470770841072-f978cf4d019e?auto=format&fit=crop&w=1600&q=75",
+  "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=1600&q=75",
+  "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1600&q=75",
+  "https://images.unsplash.com/photo-1448375240586-882707db888b?auto=format&fit=crop&w=1600&q=75"
+];
+
 /* =========================================================
    常量
    ========================================================= */
 var TOTAL = 30;               // 照片数量
-var PHOTO_W = 150;            // 照片宽度 px
-var GAP = 150;                // 照片间距 px
+var PHOTO_W = 150;            // 照片宽度 px（build 时根据屏幕计算）
+var GAP = 150;                // 照片间距 px（build 时根据屏幕计算，默认等于半屏）
 var BOUNCE = 16;              // 弹跳幅度 px
-var SPEED = 160;              // 跑道滚动速度 px/s
+var SPEED = 170;              // 跑道滚动速度 px/s
 var BOUNCE_SPEED = 2.6;       // 弹跳频率
+
+// build 时按屏幕宽度计算：照片宽约为屏宽 42%，相邻照片间距约为半屏
+var vw = function(){ return window.innerWidth||360; };
+var PHOTO_W_PX = 0;           // 计算后的照片宽带
+var GAP_PX = 0;               // 计算后的照片间距
 
 var state = {
   running:false,   // 是否滚动
@@ -244,15 +290,20 @@ function $(id){ return document.getElementById(id); }
    初始化 DOM
    ========================================================= */
 function build(){
+  // 动态尺寸：照片宽约屏宽 30%（避免照片过高伸进上方背景），间距约半屏
+  var W = window.innerWidth||360;
+  PHOTO_W_PX = Math.round(W*0.30);
+  GAP_PX = Math.round(W*0.50);
   el = {
     cover:$("cover"), buttons:$("btnEnter"), fireworks:$("fireworks"),
     stage:$("stage"), bg:$("bg"), phaseLabel:$("phaseLabel"), phaseSub:$("phaseSub"),
     miniStage:$("miniStage"), runLayer:$("runLayer"),
     barFill:$("barFill"), timeTxt:$("timeTxt"),
-    btnPrev:$("btnPrev"), btnPause:$("btnPause"), btnNext:$("btnNext"),
+    btnPrev:$("btnPrev"), btnPause:$("btnPause"), btnNext:$("btnNext"), btnMusic:$("btnMusic"),
     progress:$("progress"),
     editPanel:$("editPanel"), editList:$("editList"),
-    panelClose:$("panelClose"), saveBtn:$("saveBtn"), photoEditBtn:$("photoEditBtn")
+    panelClose:$("panelClose"), saveBtn:$("saveBtn"), photoEditBtn:$("photoEditBtn"),
+    musicUploadBtn:$("musicUploadBtn"), musicFile:$("musicFile"), musicStatus:$("musicStatus")
   };
 
   // 生成跑道上的照片
@@ -279,6 +330,9 @@ function build(){
     cap.innerHTML='<b>'+ (info.date||"") +'</b><span>'+ (info.place||"") +'</span>';
     div.appendChild(imgEl);
     div.appendChild(cap);
+    // 按顺序排列：left = i*(照片宽+间距)，默认图片宽、间距均用内联覆盖
+    div.style.width = PHOTO_W_PX+"px";
+    div.style.left = (i*(PHOTO_W_PX+GAP_PX))+"px";
     el.runLayer.appendChild(div);
   }
 
@@ -372,36 +426,82 @@ function update(){
 }
 
 function startShow(){
-  // 开场：全屏烟花约 3 秒
+  // 在本次真实用户点击（「开始」）手势内直接真正播放音乐
+  //（移动端/微信 WebView 只允许在用户点击等真实手势内播放音频）
+  musicPlay();   // 点「开始」立即开播
+
+  // 开场：全屏烟花约 3 秒（纯动画，营造氛围，不阻塞主流程）
   fwInit(); fwActive=true; fwLoop();
   var t=0;
   var iv=setInterval(function(){
     fwSpawn(3);
     t+=1;
-    if(t>=2.8){
-      clearInterval(iv);
-      // 淡出封面，进入操场
-      el.cover.style.opacity="0";
-      setTimeout(function(){
-        el.cover.style.display="none";
-        el.stage.style.display="block";
-        startRun();
-      },1100);
-    }
+    if(t>=2.8){ clearInterval(iv); }
   },220);
+
+  // ===== 关键：照片要在「音乐确实开始唱了」之后才动 =====
+  // 用音频的 playing 事件（真正开始输出声音）作为进入操场的触发点。
+  var entered=false;
+  function enterFromCover(){
+    if(entered) return; entered=true;
+    el.cover.style.opacity="0";
+    setTimeout(function(){
+      el.cover.style.display="none";
+      el.stage.style.display="block";
+      startRun();   // 照片开始动
+    },700);
+  }
+  // playing：音频真正开始播放声音时触发
+  if(bgAudio && !bgAudio._enterBound){
+    bgAudio._enterBound=true;
+    bgAudio.addEventListener("playing", enterFromCover);
+  }
+  // 兜底：如果音乐已经在唱（当前不是暂停），直接进入；否则给一个最迟时限（12 秒）避免卡住
+  function tryEnterNow(){
+    if(bgAudio && !bgAudio.paused && bgAudio.currentTime>0){ enterFromCover(); }
+  }
+  setTimeout(tryEnterNow, 1500);   // 1.5 秒后若已真实出声则进入
+  setTimeout(function(){
+    // 12 秒兜底：即便 playing 事件没触发也进入（避免永久停在封面）
+    if(!entered && bgAudio && !bgAudio.paused){ enterFromCover(); }
+    else if(!entered){ /* 音频异常：仍进入，避免卡死 */ enterFromCover(); }
+  }, 12000);
 }
 
 /* =========================================================
    跑道滚动 + 相片弹跳前进（单一动画循环）
    ========================================================= */
-var totalDist, elapsed=0, prevTs=0, playing=false, animId=null;
+var totalDist, elapsed=0, prevTs=0, playing=false, animId=null, bgSlideTimer=null, bgSlideIdx=0;
+
+function startBgSlide(){
+  var wrap = document.getElementById("bgSlide");
+  if(!wrap || wrap.children.length>0) return;  // 已初始化
+  // 预建所有 slide 层
+  for(var i=0;i<NATURE_BGS.length;i++){
+    var d=document.createElement("div");
+    d.className="slide"+(i===0?" on":"");
+    d.style.backgroundImage="url('"+NATURE_BGS[i]+"')";
+    wrap.appendChild(d);
+  }
+  bgSlideIdx=0;
+  if(bgSlideTimer) clearInterval(bgSlideTimer);
+  bgSlideTimer=setInterval(function(){
+    var slides=wrap.children; if(slides.length===0) return;
+    var next=(bgSlideIdx+1)%slides.length;
+    slides[next].style.opacity="1";         // 新图淡入
+    slides[bgSlideIdx].style.opacity="0";   // 旧图淡出
+    bgSlideIdx=next;
+  },6000);
+}
 
 function startRun(){
   // 停掉烟花，清空画面
   fwActive=false; parts.length=0; spawnQueue=0;
   if(fctx) fctx.clearRect(0,0,CW,CH);
   el.fireworks.style.display="none";
-  totalDist = TOTAL*GAP + window.innerWidth + PHOTO_W;
+  startBgSlide();  // 启动自然风光背景轮播
+  musicPlay();     // 进入操场后自动播放背景音乐（已有则播）
+  totalDist = TOTAL*(PHOTO_W_PX+GAP_PX) + window.innerWidth + PHOTO_W_PX;
   state.span = totalDist/SPEED*1000;
   elapsed=0; playing=true;
   el.btnPause.textContent="⏸";
@@ -416,7 +516,9 @@ function loop(now){
     if(elapsed>state.span) elapsed = state.span; // 到底后停住，背景定格最后一阶段
     var frac = Math.min(1, elapsed/state.span);
     var dist = SPEED*elapsed/1000;
-    el.runLayer.style.transform="translateX("+(-dist)+"px)";
+    // 初始把第一张放到界面最右边（INIT_OFFSET 右移），再随时间向左推进
+    var INIT_OFFSET = window.innerWidth - PHOTO_W_PX;
+    el.runLayer.style.transform="translateX("+(INIT_OFFSET - dist)+"px)";
     // 相片弹跳
     var els = el.runLayer.children;
     for(var i=0;i<els.length;i++){
@@ -427,7 +529,7 @@ function loop(now){
     // 进度条
     el.barFill.style.width=(frac*100)+"%";
     el.timeTxt.textContent = (Math.min(TOTAL-1,Math.floor(frac*TOTAL))+1)+" / "+TOTAL;
-    if(frac>=1){ playing=false; el.btnPause.textContent="▶"; }
+    if(frac>=1){ elapsed=0; }  // 滚到终点后自动回到起点，无限循环播放
   }
   animId=requestAnimationFrame(loop);
 }
@@ -444,7 +546,7 @@ function updatePhase(frac){
   if(ph!==state.phase && ph<PHASES.length){
     state.phase=ph;
     var p=PHASES[ph];
-    el.bg.style.background=p.color;
+    // 背景由自然风光轮播统一控制，这里只改阶段文字
     el.phaseLabel.textContent=p.name;
     el.phaseSub.textContent=p.sub;
     el.miniStage.innerHTML="❤ "+p.name + (p.sub?" · "+p.sub:"");
@@ -532,6 +634,69 @@ function bindUploads(){
 }
 
 /* =========================================================
+   方案A扩展：背景音乐（手机上传播放）
+   ========================================================= */
+var bgAudio = null;      // 唯一音频对象
+var musicLoaded = false; // 是否已初始化音频
+function ensureMusic(){
+  if(musicLoaded) return;
+  musicLoaded = true;
+  try{
+    if(SAVED_MUSIC){
+      // 优先：手机上传的音乐（本地 base64，离线也能播）
+      bgAudio = new Audio(SAVED_MUSIC);
+    } else {
+      // 默认内置：同源 music/bg.mp3（随页面部署，人人可听）
+      bgAudio = new Audio(DEFAULT_MUSIC_URL);
+    }
+    bgAudio.loop = true;
+    bgAudio.preload = "auto";
+  }catch(e){ bgAudio=null; }
+}
+function musicPlay(){
+  ensureMusic();
+  if(!bgAudio) return;
+  // 浏览器要求用户交互后才能播放；这里由点击开始/点击音乐触发，满足条件
+  var p = bgAudio.play();
+  if(p && p.catch) p.catch(function(){ /* 忽略自动播放被拦截 */ });
+  el.btnMusic.textContent = "🎵";
+}
+function musicStop(){
+  if(bgAudio) bgAudio.pause();
+  el.btnMusic.textContent = "🎵";
+}
+function musicToggle(){
+  ensureMusic();
+  if(!bgAudio){ alert("音乐加载失败，请尝试上传一首背景音乐（✏ 编辑照片 → 背景音乐 → 上传）"); return; }
+  if(bgAudio.paused){ musicPlay(); }
+  else { musicStop(); }
+}
+function handleMusicUpload(input){
+  var f = input && input.files && input.files[0];
+  if(!f) return;
+  if(!/\/audio/.test(f.type) && !/\.(mp3|m4a|aac|wav|ogg|flac)$/i.test(f.name)){
+    alert("请选择音频文件（mp3/m4a/wav 等）");
+    return;
+  }
+  var reader = new FileReader();
+  reader.onload = function(ev){
+    SAVED_MUSIC = ev.target.result;
+    try{ localStorage.setItem("qixi_music", SAVED_MUSIC); }catch(e){
+      alert("音乐文件可能太大，本机存不下。建议选一首短一点的 mp3（几 MB 内）。"); return;
+    }
+    // 重置音频并立即播放试试
+    musicLoaded = false; bgAudio = null; ensureMusic();
+    el.musicStatus.textContent = f.name;
+    musicPlay();
+  };
+  reader.readAsDataURL(f);
+}
+function refreshMusicStatus(){
+  if(!el.musicStatus) return;
+  el.musicStatus.textContent = SAVED_MUSIC ? "已上传 ✓" : "使用默认内置";
+}
+
+/* =========================================================
    启动
    ========================================================= */
 build();
@@ -549,7 +714,11 @@ el.buttons.addEventListener("click",startShow);
 el.photoEditBtn.addEventListener("click",openPanel);
 el.panelClose.addEventListener("click",closePanel);
 el.saveBtn.addEventListener("click",closePanel);
+el.btnMusic.addEventListener("click",musicToggle);
+el.musicUploadBtn.addEventListener("click",function(){ el.musicFile.click(); });
+el.musicFile.addEventListener("change",function(){ handleMusicUpload(el.musicFile); });
 bindUploads();
+refreshMusicStatus();
 </script>
 </body>
 </html>
