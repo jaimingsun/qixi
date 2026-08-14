@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>七夕快乐 ❤</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body { width:100%; height:100%; overflow:hidden; background:#0b0b14; font-family:"PingFang SC","Microsoft YaHei",sans-serif; }
+  #app { width:100%; height:100%; position:relative; }
+
+  /* ===== 开场 ===== */
+  #cover { position:absolute; inset:0; z-index:50; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; background:radial-gradient(circle at 50% 30%, #1a1030 0%, #0b0b14 70%);
+    transition:opacity 1.2s ease; }
+  #cover .title { font-size:19vw; font-weight:800; color:#fff; letter-spacing:.08em;
+    background:linear-gradient(180deg,#ffd76e,#ff6b9d); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
+    text-shadow:0 8px 40px rgba(255,120,160,.4); }
+  @media(min-width:480px){ #cover .title{ font-size:90px; } }
+  #cover .sub { margin-top:8px; color:#ffd0e0; font-size:14px; letter-spacing:.3em; opacity:.85; }
+  #cover .enter { margin-top:44px; padding:14px 52px; border-radius:40px; border:1px solid rgba(255,255,255,.4);
+    background:rgba(255,255,255,.06); color:#fff; font-size:17px; letter-spacing:.2em; cursor:pointer;
+    backdrop-filter:blur(6px); transition:all .3s; user-select:none; }
+  #cover .enter:active { transform:scale(.95); background:rgba(255,255,255,.18); }
+  #cover .hint { position:absolute; bottom:30px; color:rgba(255,255,255,.4); font-size:12px; letter-spacing:.15em; }
+
+  /* ===== 烟花画布（覆盖层） ===== */
+  #fireworks { position:absolute; inset:0; z-index:40; pointer-events:none; }
+
+  /* ===== 操场主场景 ===== */
+  #stage { position:absolute; inset:0; z-index:10; display:none; overflow:hidden; }
+  /* 背景阶段纯色 */
+  #bg { position:absolute; inset:0; transition:background 2s ease; }
+  #bgStage { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; }
+  #bgStage.phaseText { display:none; }
+  #phaseText { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; pointer-events:none; }
+  #phaseLabel { font-size:10vw; font-weight:800; color:#fff; letter-spacing:.15em; opacity:.9;
+    text-shadow:0 6px 30px rgba(0,0,0,.45); text-align:center; padding:0 6vw; line-height:1.3; }
+  @media(min-width:480px){ #phaseLabel{ font-size:52px; } }
+  #phaseSub { font-size:.32em; font-weight:400; letter-spacing:.3em; opacity:.7; margin-top:10px; color:#fff; text-shadow:0 4px 20px rgba(0,0,0,.4); }
+
+  /* 操场地面 + 跑道 */
+  #ground { position:absolute; left:0; right:0; bottom:0; height:62%; }
+  #grass { position:absolute; left:0; right:0; bottom:0; height:16%; background:linear-gradient(180deg,#2f9e44,#1f7a32); }
+  #track { position:absolute; left:0; right:0; bottom:14%; height:30%;
+    background:repeating-linear-gradient(90deg,#c0392b 0 60px,#fff 60px 66px,#c0392b 66px 130px,#e8e8e8 130px 134px,#c0392b 134px 200px,#d7d7d7 200px 204px,#c0392b 204px 270px,#fff 270px 276px,#c0392b 276px 340px,#e0e0e0 340px 344px,#c0392b 344px 410px);
+    border-top:4px solid #fff; border-bottom:4px solid #aaa; box-shadow:inset 0 -8px 18px rgba(0,0,0,.25); }
+  /* 跑道横向移动层 */
+  #runLayer { position:absolute; left:0; right:0; bottom:14%; height:30%; will-change:transform; }
+
+  /* 跑道上的照片 */
+  .ph { position:absolute; bottom:0; width:150px; will-change:transform;
+    background:#fff; border-radius:10px; padding:8px 8px 6px; box-shadow:0 10px 24px rgba(0,0,0,.35);
+    transform-origin:50% 100%; }
+  .ph .img { width:100%; height:112px; border-radius:6px; background:#eee center/cover no-repeat; }
+  .ph .cap { margin-top:6px; text-align:center; font-size:11px; color:#333; line-height:1.4; }
+  .ph .cap b { display:block; font-size:10px; color:#c0392b; letter-spacing:.05em; }
+  .ph .cap span { font-size:9px; color:#666; }
+
+  /* 阶段角标 */
+  #miniStage { position:absolute; top:14px; left:50%; transform:translateX(-50%);
+    background:rgba(0,0,0,.45); color:#fff; padding:6px 16px; border-radius:20px; font-size:13px;
+    letter-spacing:.12em; backdrop-filter:blur(4px); z-index:5; }
+
+  /* ===== 交互控制栏 ===== */
+  #ctrl { position:absolute; left:0; right:0; bottom:0; z-index:20;
+    background:linear-gradient(0deg,rgba(0,0,0,.7),rgba(0,0,0,0)); padding:14px 14px 22px; }
+  #ctrl .row { display:flex; align-items:center; gap:12px; }
+  #progress { flex:1; height:5px; background:rgba(255,255,255,.25); border-radius:3px; position:relative; cursor:pointer; }
+  #barFill { height:100%; width:0; background:linear-gradient(90deg,#ff6b9d,#ffd76e); border-radius:3px; }
+  #timeTxt { color:#fff; font-size:11px; min-width:74px; text-align:center; opacity:.9; }
+  .ctrlBtn { background:rgba(255,255,255,.14); border:1px solid rgba(255,255,255,.3); color:#fff;
+    width:40px; height:40px; border-radius:50%; font-size:16px; cursor:pointer; flex:0 0 auto;
+    display:flex; align-items:center; justify-content:center; transition:.2s; user-select:none; }
+  .ctrlBtn:active { transform:scale(.92); background:rgba(255,255,255,.3); }
+  #btnPause { width:48px; height:48px; font-size:18px; }
+
+  #editHint { position:absolute; top:60px; left:50%; transform:translateX(-50%); color:rgba(255,255,255,.55);
+    font-size:11px; letter-spacing:.08em; background:rgba(0,0,0,.3); padding:4px 12px; border-radius:14px; z-index:6; white-space:nowrap; }
+
+  /* ===== 照片数据编辑面板 ===== */
+  #editPanel { position:absolute; inset:0; z-index:60; background:rgba(10,10,20,.94); display:none;
+    flex-direction:column; padding:20px; }
+  #editPanel .head { display:flex; align-items:center; justify-content:space-between; color:#fff; margin-bottom:14px; }
+  #editPanel .head h3 { font-size:16px; letter-spacing:.1em; }
+  #editPanel .close { color:#ff9db9; font-size:15px; cursor:pointer; padding:4px 8px; }
+  #editList { flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; }
+  .eitem { display:flex; align-items:center; gap:10px; background:#1c1c2e; border-radius:8px;
+    padding:8px 10px; margin-bottom:8px; }
+  .eitem .thumb { width:46px; height:46px; border-radius:6px; background:#333 center/cover no-repeat; flex:0 0 auto; }
+  .eitem .fields { flex:1; display:flex; flex-direction:column; gap:6px; }
+  .eitem input { background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.18); border-radius:5px;
+    color:#fff; font-size:12px; padding:6px 8px; width:100%; }
+  .eitem input::placeholder{ color:rgba(255,255,255,.35); }
+  .eitem .row2 { display:flex; gap:6px; }
+  #saveBtn { margin-top:12px; padding:13px; border:none; border-radius:10px; cursor:pointer;
+    background:linear-gradient(90deg,#ff6b9d,#ff9d5c); color:#fff; font-size:16px; font-weight:700; letter-spacing:.12em; }
+  #photoEditBtn { position:absolute; right:14px; bottom:90px; z-index:25; background:rgba(0,0,0,.6); color:#fff;
+    border:1px solid rgba(255,255,255,.3); border-radius:20px; padding:6px 14px; font-size:12px; cursor:pointer; }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- 开场 -->
+  <div id="cover">
+    <div class="title">七夕快乐</div>
+    <div class="sub">我 · 爱 · 你</div>
+    <div class="enter" id="btnEnter">开 始</div>
+    <div class="hint">点一下 “开始” 有惊喜</div>
+  </div>
+
+  <!-- 烟花 -->
+  <canvas id="fireworks"></canvas>
+
+  <!-- 主场景 -->
+  <div id="stage">
+    <div id="bg">
+      <div id="bgStage"><div id="phaseText"><div id="phaseLabel">相识</div><div id="phaseSub">缘分的开始</div></div></div>
+    </div>
+    <div id="miniStage">❤ 我们的故事</div>
+    <div id="ground">
+      <div id="grass"></div>
+      <div id="track"></div>
+    </div>
+    <div id="runLayer"></div>
+    <div id="editHint">轻触左右 ◀ ▶ 可前后走动</div>
+    <button id="photoEditBtn">✏ 编辑照片</button>
+
+    <!-- 控制栏 -->
+    <div id="ctrl">
+      <div class="row">
+        <div class="ctrlBtn" id="btnPrev">◀</div>
+        <div class="ctrlBtn" id="btnPause">⏸</div>
+        <div class="ctrlBtn" id="btnNext">▶</div>
+        <div id="progress"><div id="barFill"></div></div>
+        <div id="timeTxt">0 / 30</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 编辑面板 -->
+  <div id="editPanel">
+    <div class="head"><h3>编辑照片 · 日期 / 地点</h3><span class="close" id="panelClose">关闭</span></div>
+    <div id="editList"></div>
+    <button id="saveBtn">保存</button>
+  </div>
+
+</div>
+
+<script>
+/* =========================================================
+   数据配置区 —— 老大在这里填写照片信息（无需改代码）
+   photo: 对 photos/ 文件夹里的图片文件名（如 01.jpg）
+   date:  日期文字
+   place: 地点文字
+   ========================================================= */
+var PHOTO_INFO = [
+  { photo:"01.jpg",  date:"", place:"" },
+  { photo:"02.jpg",  date:"", place:"" },
+  { photo:"03.jpg",  date:"", place:"" },
+  { photo:"04.jpg",  date:"", place:"" },
+  { photo:"05.jpg",  date:"", place:"" },
+  { photo:"06.jpg",  date:"", place:"" },
+  { photo:"07.jpg",  date:"", place:"" },
+  { photo:"08.jpg",  date:"", place:"" },
+  { photo:"09.jpg",  date:"", place:"" },
+  { photo:"10.jpg",  date:"", place:"" },
+  { photo:"11.jpg",  date:"", place:"" },
+  { photo:"12.jpg",  date:"", place:"" },
+  { photo:"13.jpg",  date:"", place:"" },
+  { photo:"14.jpg",  date:"", place:"" },
+  { photo:"15.jpg",  date:"", place:"" },
+  { photo:"16.jpg",  date:"", place:"" },
+  { photo:"17.jpg",  date:"", place:"" },
+  { photo:"18.jpg",  date:"", place:"" },
+  { photo:"19.jpg",  date:"", place:"" },
+  { photo:"20.jpg",  date:"", place:"" },
+  { photo:"21.jpg",  date:"", place:"" },
+  { photo:"22.jpg",  date:"", place:"" },
+  { photo:"23.jpg",  date:"", place:"" },
+  { photo:"24.jpg",  date:"", place:"" },
+  { photo:"25.jpg",  date:"", place:"" },
+  { photo:"26.jpg",  date:"", place:"" },
+  { photo:"27.jpg",  date:"", place:"" },
+  { photo:"28.jpg",  date:"", place:"" },
+  { photo:"29.jpg",  date:"", place:"" },
+  { photo:"30.jpg",  date:"", place:"" }
+];
+
+// 从 localStorage 载入已编辑的日期/地点（因为 photo 文件名固定，只覆盖 date/place）
+try{
+  var saved = JSON.parse(localStorage.getItem("qixi_photo_info")||"null");
+  if(saved && saved.length===PHOTO_INFO.length){
+    for(var si=0;si<PHOTO_INFO.length;si++){
+      if(saved[si]){ PHOTO_INFO[si].date=saved[si].date||""; PHOTO_INFO[si].place=saved[si].place||""; }
+    }
+  }
+}catch(e){}
+
+/* 阶段背景（纯色 + 标题字），按顺序过渡 */
+var PHASES = [
+  { name:"相识", sub:"缘分的开始",  color:"linear-gradient(180deg,#6a2c70,#b23e6e)" },
+  { name:"相知", sub:"慢慢靠近你",  color:"linear-gradient(180deg,#2c4a8a,#6a70c9)" },
+  { name:"相恋", sub:"心动的甜蜜",  color:"linear-gradient(180deg,#c0392b,#e08b3c)" },
+  { name:"相爱", sub:"此生挚爱",    color:"linear-gradient(180deg,#8e1e54,#d4386e)" },
+  { name:"我们结婚啦", sub:"执子之手", color:"linear-gradient(180deg,#7b1fa2,#e0245e)" },
+  { name:"我们有宝宝啦", sub:"爱的小家", color:"linear-gradient(180deg,#f2c94c,#f2994a)" }
+];
+
+/* =========================================================
+   常量
+   ========================================================= */
+var TOTAL = 30;               // 照片数量
+var PHOTO_W = 150;            // 照片宽度 px
+var GAP = 150;                // 照片间距 px
+var BOUNCE = 16;              // 弹跳幅度 px
+var SPEED = 160;              // 跑道滚动速度 px/s
+var BOUNCE_SPEED = 2.6;       // 弹跳频率
+
+var state = {
+  running:false,   // 是否滚动
+  phase:0,         // 背景阶段索引
+  startTs:0,       // 本次滚动开始时间
+  span:0           // 本次滚动的总时长 ms
+};
+var el = {};
+
+function $(id){ return document.getElementById(id); }
+
+/* =========================================================
+   初始化 DOM
+   ========================================================= */
+function build(){
+  el = {
+    cover:$("cover"), buttons:$("btnEnter"), fireworks:$("fireworks"),
+    stage:$("stage"), bg:$("bg"), phaseLabel:$("phaseLabel"), phaseSub:$("phaseSub"),
+    miniStage:$("miniStage"), runLayer:$("runLayer"),
+    barFill:$("barFill"), timeTxt:$("timeTxt"),
+    btnPrev:$("btnPrev"), btnPause:$("btnPause"), btnNext:$("btnNext"),
+    progress:$("progress"),
+    editPanel:$("editPanel"), editList:$("editList"),
+    panelClose:$("panelClose"), saveBtn:$("saveBtn"), photoEditBtn:$("photoEditBtn")
+  };
+
+  // 生成跑道上的照片
+  function fallback(el_, fn, fnsvg){
+    var img = new Image();
+    img.onload=function(){ /* 真实照片存在，保持 */ };
+    img.onerror=function(){ el_.style.backgroundImage="url(photos/"+fnsvg+")"; };
+    img.src="photos/"+fn;
+  }
+  for(var i=0;i<TOTAL;i++){
+    var info = PHOTO_INFO[i] || {};
+    var div = document.createElement("div");
+    div.className="ph";
+    div.dataset.idx = i;
+    var fn = (info.photo||"01.jpg");
+    var fnsvg = fn.replace(/\.[a-z0-9]+$/i, ".svg");
+    var imgEl = document.createElement("div");
+    imgEl.className="img";
+    imgEl.style.backgroundImage="url(photos/"+fn+")";
+    fallback(imgEl, fn, fnsvg);
+    var cap = document.createElement("div");
+    cap.className="cap";
+    cap.innerHTML='<b>'+ (info.date||"") +'</b><span>'+ (info.place||"") +'</span>';
+    div.appendChild(imgEl);
+    div.appendChild(cap);
+    el.runLayer.appendChild(div);
+  }
+
+  // 编辑面板列表
+  for(var j=0;j<TOTAL;j++){
+    var info2 = PHOTO_INFO[j] || {};
+    var fn2 = (info2.photo||"01.jpg");
+    var fnsvg2 = fn2.replace(/\.[a-z0-9]+$/i, ".svg");
+    var it = document.createElement("div");
+    it.className="eitem";
+    var thumb = document.createElement("div");
+    thumb.className="thumb";
+    thumb.style.backgroundImage="url(photos/"+fn2+")";
+    fallback(thumb, fn2, fnsvg2);
+    var fields = document.createElement("div");
+    fields.className="fields";
+    fields.innerHTML=
+        '<input class="ed-date" placeholder="日期，如 2020.5.20" value="'+ (info2.date||"") +'">'+
+        '<div class="row2"><input class="ed-place" placeholder="地点，如 广州塔" value="'+ (info2.place||"") +'"></div>';
+    it.appendChild(thumb);
+    it.appendChild(fields);
+    el.editList.appendChild(it);
+  }
+
+  el.bg.style.background = PHASES[0].color;
+  el.phaseSub.textContent = PHASES[0].sub;
+}
+
+/* =========================================================
+   开场 + 烟花
+   ========================================================= */
+var fctx, CW, CH, parts=[], spawnQueue=0, fwActive=false;
+function fwInit(){
+  el.fireworks.width = CW = window.innerWidth;
+  el.fireworks.height = CH = window.innerHeight;
+  fctx = el.fireworks.getContext("2d");
+}
+function fwSpawn(count){
+  spawnQueue += count;
+}
+function fwLoop(){
+  if(fwActive){
+    if(spawnQueue>0){ parts.push(makeBurst()); spawnQueue--; update(); }
+    if(Math.random()<0.04 && parts.length<30) parts.push(makeBurst());
+    update();
+  }
+  requestAnimationFrame(fwLoop);
+}
+function makeBurst(){
+  var x = CW*(0.15+Math.random()*0.7);
+  var y = CH*(0.1+Math.random()*0.35);
+  var colors=["#ffe066","#ff9db9","#7ee0ff","#b8ff7e","#ffd7a8","#e0b3ff"];
+  var c=colors[Math.floor(Math.random()*colors.length)];
+  var n = 50+Math.floor(Math.random()*35);
+  var base = [];
+  for(var i=0;i<n;i++){
+    var ang=Math.random()*Math.PI*2, sp=1.5+Math.random()*3.5;
+    base.push({x:x,y:y,vx:Math.cos(ang)*sp,vy:Math.sin(ang)*sp-0.5,g:0.045,life:60+Math.random()*30,c:c});
+  }
+  return {x:x,y:y,base:base,life:140};
+}
+function update(){
+  fctx.clearRect(0,0,CW,CH);
+  fctx.globalCompositeOperation="lighter";
+  for(var b=parts.length-1;b>=0;b--){
+    var bl = parts[b];
+    bl.life--;
+    if(bl.life<=0){ parts.splice(b,1); continue; }
+    var alpha = Math.min(1, bl.life/60);
+    for(var i=0;i<bl.base.length;i++){
+      var p=bl.base[i];
+      p.vx*=0.985; p.vy*=0.985; p.vy+=p.g;
+      p.x+=p.vx; p.y+=p.vy; p.life--;
+      if(p.life<=0) continue;
+      // 渐变尾巴
+      fctx.globalAlpha=alpha;
+      fctx.beginPath();
+      fctx.arc(p.x,p.y,1.6,0,Math.PI*2);
+      fctx.fillStyle=p.c;
+      fctx.fill();
+    }
+  }
+  fctx.globalAlpha=1;
+  fctx.globalCompositeOperation="source-over";
+}
+
+function startShow(){
+  // 开场：全屏烟花约 3 秒
+  fwInit(); fwActive=true; fwLoop();
+  var t=0;
+  var iv=setInterval(function(){
+    fwSpawn(3);
+    t+=1;
+    if(t>=2.8){
+      clearInterval(iv);
+      // 淡出封面，进入操场
+      el.cover.style.opacity="0";
+      setTimeout(function(){
+        el.cover.style.display="none";
+        el.stage.style.display="block";
+        startRun();
+      },1100);
+    }
+  },220);
+}
+
+/* =========================================================
+   跑道滚动 + 相片弹跳前进（单一动画循环）
+   ========================================================= */
+var totalDist, elapsed=0, prevTs=0, playing=false, animId=null;
+
+function startRun(){
+  // 停掉烟花，清空画面
+  fwActive=false; parts.length=0; spawnQueue=0;
+  if(fctx) fctx.clearRect(0,0,CW,CH);
+  el.fireworks.style.display="none";
+  totalDist = TOTAL*GAP + window.innerWidth + PHOTO_W;
+  state.span = totalDist/SPEED*1000;
+  elapsed=0; playing=true;
+  el.btnPause.textContent="⏸";
+  prevTs=performance.now();
+  if(animId==null){ animId=requestAnimationFrame(loop); }
+}
+function loop(now){
+  var dt = now - prevTs;
+  prevTs = now;
+  if(playing){
+    elapsed += dt;
+    if(elapsed>state.span) elapsed = state.span; // 到底后停住，背景定格最后一阶段
+    var frac = Math.min(1, elapsed/state.span);
+    var dist = SPEED*elapsed/1000;
+    el.runLayer.style.transform="translateX("+(-dist)+"px)";
+    // 相片弹跳
+    var els = el.runLayer.children;
+    for(var i=0;i<els.length;i++){
+      var bounce = Math.abs(Math.sin((elapsed/1000)*BOUNCE_SPEED + i*1.7)) * BOUNCE;
+      els[i].style.bottom = bounce+"px";
+    }
+    updatePhase(frac);
+    // 进度条
+    el.barFill.style.width=(frac*100)+"%";
+    el.timeTxt.textContent = (Math.min(TOTAL-1,Math.floor(frac*TOTAL))+1)+" / "+TOTAL;
+    if(frac>=1){ playing=false; el.btnPause.textContent="▶"; }
+  }
+  animId=requestAnimationFrame(loop);
+}
+function getFrac(){ return Math.min(1, elapsed/state.span); }
+function setFrac(frac){
+  elapsed = Math.max(0,Math.min(1,frac))*state.span;
+  playing=true; el.btnPause.textContent="⏸";
+  // 立即刷新一帧
+  var now=performance.now(); prevTs=now; loop(now);
+}
+function updatePhase(frac){
+  var f = frac*TOTAL;
+  var ph = Math.min(PHASES.length-1, Math.floor(f/5));
+  if(ph!==state.phase && ph<PHASES.length){
+    state.phase=ph;
+    var p=PHASES[ph];
+    el.bg.style.background=p.color;
+    el.phaseLabel.textContent=p.name;
+    el.phaseSub.textContent=p.sub;
+    el.miniStage.innerHTML="❤ "+p.name + (p.sub?" · "+p.sub:"");
+  }
+}
+
+/* =========================================================
+   交互控制
+   ========================================================= */
+function tapPause(){
+  if(playing){ playing=false; el.btnPause.textContent="▶"; }
+  else { playing=true; el.btnPause.textContent="⏸"; prevTs=performance.now(); }
+}
+function step(dir){
+  var nf = Math.max(0,Math.min(1, getFrac() + dir/TOTAL));
+  setFrac(nf);
+}
+/* （事件绑定统一放到文件底部 build() 之后执行，避免 build 前 el 为空导致报错） */
+
+/* =========================================================
+   编辑面板
+   ========================================================= */
+function openPanel(){
+  el.editPanel.style.display="flex";
+}
+function closePanel(){
+  // 保存到 DOM 上的卡片
+  var items=el.editList.children;
+  var cards=el.runLayer.children;
+  for(var i=0;i<items.length;i++){
+    var d=items[i].querySelector(".ed-date").value;
+    var p2=items[i].querySelector(".ed-place").value;
+    var cap=cards[i].querySelector(".cap");
+    cap.innerHTML='<b>'+d+'</b><span>'+p2+'</span>';
+    // 同步内存配置
+    PHOTO_INFO[i].date=d; PHOTO_INFO[i].place=p2;
+  }
+  // 持久化到本地
+  try{ localStorage.setItem("qixi_photo_info", JSON.stringify(PHOTO_INFO)); }catch(e){}
+  el.editPanel.style.display="none";
+}
+
+/* =========================================================
+   启动
+   ========================================================= */
+build();
+
+// 所有事件绑定必须在 build() 之后，否则 el 还是空对象会抛错
+el.progress.addEventListener("click",function(e){
+  var r=this.getBoundingClientRect();
+  var frac=(e.clientX-r.left)/r.width;
+  setFrac(frac);
+});
+el.btnPrev.addEventListener("click",function(){ step(-1); });
+el.btnNext.addEventListener("click",function(){ step(1); });
+el.btnPause.addEventListener("click",tapPause);
+el.buttons.addEventListener("click",startShow);
+el.photoEditBtn.addEventListener("click",openPanel);
+el.panelClose.addEventListener("click",closePanel);
+el.saveBtn.addEventListener("click",closePanel);
+</script>
+</body>
+</html>
