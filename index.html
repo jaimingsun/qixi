@@ -430,42 +430,23 @@ function startShow(){
   //（移动端/微信 WebView 只允许在用户点击等真实手势内播放音频）
   musicPlay();   // 点「开始」立即开播
 
-  // 开场：全屏烟花约 3 秒（纯动画，营造氛围，不阻塞主流程）
+  // 开场：全屏烟花约 3 秒
   fwInit(); fwActive=true; fwLoop();
   var t=0;
   var iv=setInterval(function(){
     fwSpawn(3);
     t+=1;
-    if(t>=2.8){ clearInterval(iv); }
+    if(t>=2.8){
+      clearInterval(iv);
+      // 淡出封面，进入操场（照片开始动）
+      el.cover.style.opacity="0";
+      setTimeout(function(){
+        el.cover.style.display="none";
+        el.stage.style.display="block";
+        startRun();
+      },1100);
+    }
   },220);
-
-  // ===== 关键：照片要在「音乐确实开始唱了」之后才动 =====
-  // 用音频的 playing 事件（真正开始输出声音）作为进入操场的触发点。
-  var entered=false;
-  function enterFromCover(){
-    if(entered) return; entered=true;
-    el.cover.style.opacity="0";
-    setTimeout(function(){
-      el.cover.style.display="none";
-      el.stage.style.display="block";
-      startRun();   // 照片开始动
-    },700);
-  }
-  // playing：音频真正开始播放声音时触发
-  if(bgAudio && !bgAudio._enterBound){
-    bgAudio._enterBound=true;
-    bgAudio.addEventListener("playing", enterFromCover);
-  }
-  // 兜底：如果音乐已经在唱（当前不是暂停），直接进入；否则给一个最迟时限（12 秒）避免卡住
-  function tryEnterNow(){
-    if(bgAudio && !bgAudio.paused && bgAudio.currentTime>0){ enterFromCover(); }
-  }
-  setTimeout(tryEnterNow, 1500);   // 1.5 秒后若已真实出声则进入
-  setTimeout(function(){
-    // 12 秒兜底：即便 playing 事件没触发也进入（避免永久停在封面）
-    if(!entered && bgAudio && !bgAudio.paused){ enterFromCover(); }
-    else if(!entered){ /* 音频异常：仍进入，避免卡死 */ enterFromCover(); }
-  }, 12000);
 }
 
 /* =========================================================
