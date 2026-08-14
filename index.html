@@ -93,6 +93,10 @@
     color:#fff; font-size:12px; padding:6px 8px; width:100%; }
   .eitem input::placeholder{ color:rgba(255,255,255,.35); }
   .eitem .row2 { display:flex; gap:6px; }
+  .eitem .uploadBtn { flex:0 0 auto; background:rgba(255,107,157,.18); color:#ff9db9; border:1px dashed rgba(255,107,157,.5);
+    border-radius:6px; padding:4px 8px; font-size:11px; cursor:pointer; white-space:nowrap; }
+  .eitem .upTip { font-size:10px; color:rgba(255,255,255,.35); }
+  .panelHint { color:rgba(255,255,255,.45); font-size:11px; line-height:1.6; margin:-4px 0 12px; }
   #saveBtn { margin-top:12px; padding:13px; border:none; border-radius:10px; cursor:pointer;
     background:linear-gradient(90deg,#ff6b9d,#ff9d5c); color:#fff; font-size:16px; font-weight:700; letter-spacing:.12em; }
   #photoEditBtn { position:absolute; right:14px; bottom:90px; z-index:25; background:rgba(0,0,0,.6); color:#fff;
@@ -141,7 +145,8 @@
 
   <!-- 编辑面板 -->
   <div id="editPanel">
-    <div class="head"><h3>编辑照片 · 日期 / 地点</h3><span class="close" id="panelClose">关闭</span></div>
+    <div class="head"><h3>编辑照片</h3><span class="close" id="panelClose">关闭</span></div>
+    <div class="panelHint">①点击「📷上传」可从相册选择这张照片（保存在本机，刷新不丢）<br>②填写日期和地点后点「保存」</div>
     <div id="editList"></div>
     <button id="saveBtn">保存</button>
   </div>
@@ -198,6 +203,13 @@ try{
   }
 }catch(e){}
 
+/* 方案A：手机本地上传的照片库（base64 存 localStorage），key=照片序号 */
+var SAVED_IMGS = {};   // { 序号: "data:image/...;base64,..." }
+try{
+  var simg = JSON.parse(localStorage.getItem("qixi_photo_imgs")||"null");
+  if(simg && typeof simg==="object"){ SAVED_IMGS = simg; }
+}catch(e){}
+
 /* 阶段背景（纯色 + 标题字），按顺序过渡 */
 var PHASES = [
   { name:"相识", sub:"缘分的开始",  color:"linear-gradient(180deg,#6a2c70,#b23e6e)" },
@@ -244,7 +256,8 @@ function build(){
   };
 
   // 生成跑道上的照片
-  function fallback(el_, fn, fnsvg){
+  function fallback(el_, fn, fnsvg, local){
+    if(local){ el_.style.backgroundImage="url("+local+")"; return; }  // 优先本地上传的照片
     var img = new Image();
     img.onload=function(){ /* 真实照片存在，保持 */ };
     img.onerror=function(){ el_.style.backgroundImage="url(photos/"+fnsvg+")"; };
@@ -259,8 +272,8 @@ function build(){
     var fnsvg = fn.replace(/\.[a-z0-9]+$/i, ".svg");
     var imgEl = document.createElement("div");
     imgEl.className="img";
-    imgEl.style.backgroundImage="url(photos/"+fn+")";
-    fallback(imgEl, fn, fnsvg);
+    imgEl.dataset.idx = i;
+    fallback(imgEl, fn, fnsvg, SAVED_IMGS[i]||null);
     var cap = document.createElement("div");
     cap.className="cap";
     cap.innerHTML='<b>'+ (info.date||"") +'</b><span>'+ (info.place||"") +'</span>';
@@ -279,14 +292,20 @@ function build(){
     var thumb = document.createElement("div");
     thumb.className="thumb";
     thumb.style.backgroundImage="url(photos/"+fn2+")";
-    fallback(thumb, fn2, fnsvg2);
+    fallback(thumb, fn2, fnsvg2, SAVED_IMGS[j]||null);
     var fields = document.createElement("div");
     fields.className="fields";
     fields.innerHTML=
         '<input class="ed-date" placeholder="日期，如 2020.5.20" value="'+ (info2.date||"") +'">'+
-        '<div class="row2"><input class="ed-place" placeholder="地点，如 广州塔" value="'+ (info2.place||"") +'"></div>';
+        '<div class="row2"><input class="ed-place" placeholder="地点，如 广州塔" value="'+ (info2.place||"") +'"></div>'+
+        '<div class="row2"><button class="uploadBtn" data-up="'+j+'">📷 上传</button><span class="upTip">从相册选这张照片</span></div>';
+    // 隐藏的 file input，方案A：支持手机直接从相册选图
+    var fileIn = document.createElement("input");
+    fileIn.type="file"; fileIn.accept="image/*"; fileIn.style.display="none";
+    fileIn.dataset.up = j;
     it.appendChild(thumb);
     it.appendChild(fields);
+    it.appendChild(fileIn);
     el.editList.appendChild(it);
   }
 
@@ -469,6 +488,50 @@ function closePanel(){
 }
 
 /* =========================================================
+   方案A：手机本地上传照片
+   ========================================================= */
+function handleImgUpload(idx, input){
+  var f = input && input.files && input.files[0];
+  if(!f) return;
+  var reader = new FileReader();
+  reader.onload = function(ev){
+    var dataUrl = ev.target.result;
+    SAVED_IMGS[idx] = dataUrl;
+    // 持久化（注意：30 张 base64 加起来可能较大，捕获超限异常）
+    try{ localStorage.setItem("qixi_photo_imgs", JSON.stringify(SAVED_IMGS)); }catch(e){
+      alert("本机存储空间不足，可能存不下这么多高清照片。建议用电脑端上传到 photos 文件夹更靠谱。");
+    }
+    // 立即应用到跑道照片 + 编辑面板缩略图
+    var runImgs = el.runLayer.querySelectorAll(".img");
+    if(runImgs[idx]) runImgs[idx].style.backgroundImage="url("+dataUrl+")";
+    var th = el.editList.children[idx] && el.editList.children[idx].querySelector(".thumb");
+    if(th) th.style.backgroundImage="url("+dataUrl+")";
+  };
+  reader.readAsDataURL(f);
+}
+function bindUploads(){
+  var btns = el.editList.querySelectorAll(".uploadBtn");
+  for(var i=0;i<btns.length;i++){
+    (function(btn){
+      btn.addEventListener("click", function(){
+        var idx = parseInt(btn.getAttribute("data-up"),10);
+        var fileIn = btn.closest(".eitem").querySelector("input[type=file]");
+        if(fileIn) fileIn.click();
+      });
+    })(btns[i]);
+    // input change 事件
+    var fileIn = el.editList.children[i] && el.editList.children[i].querySelector("input[type=file]");
+    if(fileIn){
+      (function(fi){
+        fi.addEventListener("change", function(){
+          handleImgUpload(parseInt(fi.getAttribute("data-up"),10), fi);
+        });
+      })(fileIn);
+    }
+  }
+}
+
+/* =========================================================
    启动
    ========================================================= */
 build();
@@ -486,6 +549,7 @@ el.buttons.addEventListener("click",startShow);
 el.photoEditBtn.addEventListener("click",openPanel);
 el.panelClose.addEventListener("click",closePanel);
 el.saveBtn.addEventListener("click",closePanel);
+bindUploads();
 </script>
 </body>
 </html>
