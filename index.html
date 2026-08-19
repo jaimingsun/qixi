@@ -181,7 +181,7 @@
 <script>
 /* =========================================================
    数据配置区 —— 老大在这里填写照片信息（无需改代码）
-   photo: 对 photos/ 文件夹里的图片文件名（如 01.jpg）
+   photo: 图片文件名（如 01.jpg）。系统会先尝试根目录，再尝试 photos/ 子文件夹（都找不到则用占位图）
    date:  日期文字
    place: 地点文字
    ========================================================= */
@@ -316,12 +316,20 @@ function build(){
   };
 
   // 生成跑道上的照片
-  function fallback(el_, fn, fnsvg, local){
-    if(local){ el_.style.backgroundImage="url("+local+")"; return; }  // 优先本地上传的照片
+  // 照片加载：优先本地上传(local)→根目录 fn→photos/fn→photos/fnsvg 占位。
+  // 兼顾「照片放根目录」与「照片放 photos/ 子目录」两种部署方式。
+  function loadPhoto(el_, fn, fnsvg, local){
+    if(local){ el_.style.backgroundImage="url("+local+")"; return; }  // 本地上传
+    var tries = [fn, "photos/"+fn];
+    var svgFallback = "photos/"+fnsvg;
+    var cur = 0;
     var img = new Image();
-    img.onload=function(){ /* 真实照片存在，保持 */ };
-    img.onerror=function(){ el_.style.backgroundImage="url(photos/"+fnsvg+")"; };
-    img.src="photos/"+fn;
+    img.onload = function(){ el_.style.backgroundImage="url("+tries[cur]+")"; };
+    img.onerror = function(){
+      if(cur < tries.length-1){ cur++; img.src = tries[cur]; }
+      else { el_.style.backgroundImage="url("+svgFallback+")"; }
+    };
+    img.src = tries[0];
   }
   for(var i=0;i<TOTAL;i++){
     var info = PHOTO_INFO[i] || {};
@@ -333,7 +341,7 @@ function build(){
     var imgEl = document.createElement("div");
     imgEl.className="img";
     imgEl.dataset.idx = i;
-    fallback(imgEl, fn, fnsvg, SAVED_IMGS[i]||null);
+    loadPhoto(imgEl, fn, fnsvg, SAVED_IMGS[i]||null);
     var cap = document.createElement("div");
     cap.className="cap";
     cap.innerHTML='<b>'+ (info.date||"") +'</b><span>'+ (info.place||"") +'</span>';
@@ -354,8 +362,7 @@ function build(){
     it.className="eitem";
     var thumb = document.createElement("div");
     thumb.className="thumb";
-    thumb.style.backgroundImage="url(photos/"+fn2+")";
-    fallback(thumb, fn2, fnsvg2, SAVED_IMGS[j]||null);
+    loadPhoto(thumb, fn2, fnsvg2, SAVED_IMGS[j]||null);
     var fields = document.createElement("div");
     fields.className="fields";
     fields.innerHTML=
