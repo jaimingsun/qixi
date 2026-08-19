@@ -137,7 +137,7 @@
   <div id="stage">
     <div id="bg">
       <div id="bgSlide"></div>
-      <div id="bgStage"><div id="phaseText"><div id="phaseLabel">相知</div><div id="phaseSub">慢慢靠近你</div></div></div>
+      <div id="bgStage"><div id="phaseText"><div id="phaseLabel">相识</div><div id="phaseSub">初见心动</div></div></div>
     </div>
     <div id="miniStage">❤ 我们的故事</div>
     <div id="ground">
@@ -156,7 +156,7 @@
         <div class="ctrlBtn" id="btnNext">▶</div>
         <div class="ctrlBtn" id="btnMusic" title="音乐开关">🎵</div>
         <div id="progress"><div id="barFill"></div></div>
-        <div id="timeTxt">0 / 25</div>
+        <div id="timeTxt">0 / 30</div>
       </div>
     </div>
   </div>
@@ -186,31 +186,36 @@
    place: 地点文字
    ========================================================= */
 var PHOTO_INFO = [
-  { photo:"086bc6849720dff0745f2e3d6d1fcfe8.jpg",  date:"", place:"" },
-  { photo:"11baf994c38a292eafdcf30ab6d35e90.jpg",  date:"", place:"" },
-  { photo:"1583e584a74b5d092769527639e9e7f0.jpg",  date:"", place:"" },
-  { photo:"294150ce98e84fa0d19b0b5ed8eab22f.jpg",  date:"", place:"" },
-  { photo:"33cd3d04d83678bf25269d4ec6680294.jpg",  date:"", place:"" },
-  { photo:"3858c182d6159d62061e12dc4dc436ef.jpg",  date:"", place:"" },
-  { photo:"43769ad9b153bb0aba8e14d1b690ab6b.jpg",  date:"", place:"" },
-  { photo:"54185878513cd00e5e0640c02266f0c0.jpg",  date:"", place:"" },
-  { photo:"621a9fd812120af9d30692db0802b986.jpg",  date:"", place:"" },
-  { photo:"705154ff45552517b488dcf9dffc4fd6.jpg",  date:"", place:"" },
-  { photo:"755192ac1b72d4f17145e96fe816f555.jpg",  date:"", place:"" },
-  { photo:"7b4242e1bfb2dae0bc3f7a3a95efde58.jpg",  date:"", place:"" },
-  { photo:"7b79bd0646ed044ef986eaa96105cc9d.jpg",  date:"", place:"" },
-  { photo:"810e581fa0e4733bff5960a3063f120f.jpg",  date:"", place:"" },
-  { photo:"83ed96b195938b3f9fe5ff90bbca6e6d.jpg",  date:"", place:"" },
-  { photo:"8953095cf4f0fd017ffcae482359a128.jpg",  date:"", place:"" },
-  { photo:"8f9340b1ba1f27cda6431a0cc6eca79f.jpg",  date:"", place:"" },
-  { photo:"96ec328a54d87d5e0b5996cdd9d01018.jpg",  date:"", place:"" },
-  { photo:"adab7a50f9a4aee7785f4cad3106c6fb.jpg",  date:"", place:"" },
-  { photo:"cc913faca36df42d41a04d8e229f1c86.jpg",  date:"", place:"" },
-  { photo:"cd0c80d9bac2dc528d39d01b4f0953a8.jpg",  date:"", place:"" },
-  { photo:"d51555290013302a25a86c283cda650d.jpg",  date:"", place:"" },
-  { photo:"d63deaac021a00f2b918faab92c9bbae.jpg",  date:"", place:"" },
-  { photo:"eb1e6a9ccabdf3df59ed105e1e796de5.jpg",  date:"", place:"" },
-  { photo:"f6b5b7663833c1ff143c9bdcf74c320b.jpg",  date:"", place:"" }
+  { photo:"01.jpg",  date:"", place:"" },
+  { photo:"02.jpg",  date:"", place:"" },
+  { photo:"03.jpg",  date:"", place:"" },
+  { photo:"04.jpg",  date:"", place:"" },
+  { photo:"05.jpg",  date:"", place:"" },
+  { photo:"06.jpg",  date:"", place:"" },
+  { photo:"07.jpg",  date:"", place:"" },
+  { photo:"08.jpg",  date:"", place:"" },
+  { photo:"09.jpg",  date:"", place:"" },
+  { photo:"10.jpg",  date:"", place:"" },
+  { photo:"11.jpg",  date:"", place:"" },
+  { photo:"12.jpg",  date:"", place:"" },
+  { photo:"13.jpg",  date:"", place:"" },
+  { photo:"14.jpg",  date:"", place:"" },
+  { photo:"15.jpg",  date:"", place:"" },
+  { photo:"16.jpg",  date:"", place:"" },
+  { photo:"17.jpg",  date:"", place:"" },
+  { photo:"18.jpg",  date:"", place:"" },
+  { photo:"19.jpg",  date:"", place:"" },
+  { photo:"20.jpg",  date:"", place:"" },
+  { photo:"21.jpg",  date:"", place:"" },
+  { photo:"22.jpg",  date:"", place:"" },
+  { photo:"23.jpg",  date:"", place:"" },
+  { photo:"24.jpg",  date:"", place:"" },
+  { photo:"25.jpg",  date:"", place:"" },
+  { photo:"26.jpg",  date:"", place:"" },  // 占位（照片待更新）
+  { photo:"27.jpg",  date:"", place:"" },  // 占位（照片待更新）
+  { photo:"28.jpg",  date:"", place:"" },  // 占位（照片待更新）
+  { photo:"29.jpg",  date:"", place:"" },  // 占位（照片待更新）
+  { photo:"30.jpg",  date:"", place:"" }   // 占位（照片待更新）
 ];
 
 // 从 localStorage 载入已编辑的照片信息（含 photo 文件名、date、place；支持换序后刷新保留）
@@ -248,6 +253,7 @@ var DEFAULT_MUSIC_URL = "music/bg.mp3";
    阶段背景文字（只用于显示文字，不控制背景）
    ========================================================= */
 var PHASES = [
+  { name:"相识", sub:"初见心动",    color:"linear-gradient(180deg,#1e3c72,#2a5298)" },
   { name:"相知", sub:"慢慢靠近你",  color:"linear-gradient(180deg,#2c4a8a,#6a70c9)" },
   { name:"相恋", sub:"心动的甜蜜",  color:"linear-gradient(180deg,#c0392b,#e08b3c)" },
   { name:"相爱", sub:"此生挚爱",    color:"linear-gradient(180deg,#8e1e54,#d4386e)" },
@@ -268,7 +274,7 @@ var NATURE_BGS = [
 /* =========================================================
    常量
    ========================================================= */
-var TOTAL = 25;               // 照片数量（5 个阶段 × 每阶段 5 张）
+var TOTAL = 30;               // 照片数量（6 个阶段 × 每阶段 5 张；后 5 张暂为占位，待更新照片）
 var PHOTO_W = 150;            // 照片宽度 px（build 时根据屏幕计算）
 var GAP = 150;                // 照片间距 px（build 时根据屏幕计算，默认等于半屏）
 var BOUNCE = 16;              // 弹跳幅度 px
@@ -311,8 +317,17 @@ function build(){
   };
 
   // 生成跑道上的照片
-  // 照片加载：优先本地上传(local)→根目录 fn→photos/fn→photos/fnsvg 占位。
-  // 兼顾「照片放根目录」与「照片放 photos/ 子目录」两种部署方式。
+  // 照片加载：优先本地上传(local)→根目录 fn→photos/fn→photos/fnsvg 占位→内嵌占位图。
+  // 兼顾「照片放根目录」与「照片放 photos/ 子目录」两种部署方式；最后内嵌占位图不依赖外部文件。
+  var PH_EMPTY = "data:image/svg+xml;utf8," + encodeURIComponent(
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 150">' +
+    '<defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e0e0e6"/><stop offset="1" stop-color="#c4c4cc"/></linearGradient></defs>' +
+    '<rect width="200" height="150" rx="10" fill="url(#g)"/>' +
+    '<circle cx="100" cy="60" r="22" fill="none" stroke="#8a8a94" stroke-width="5"/>' +
+    '<path d="M78 60 h44 M100 38 v44" stroke="#8a8a94" stroke-width="5" stroke-linecap="round"/>' +
+    '<rect x="60" y="105" width="80" height="18" rx="9" fill="#a0a0aa"/>' +
+    '</svg>'
+  );
   function loadPhoto(el_, fn, fnsvg, local){
     if(local){ el_.style.backgroundImage="url("+local+")"; return; }  // 本地上传
     var tries = [fn, "photos/"+fn];
@@ -322,7 +337,18 @@ function build(){
     img.onload = function(){ el_.style.backgroundImage="url("+tries[cur]+")"; };
     img.onerror = function(){
       if(cur < tries.length-1){ cur++; img.src = tries[cur]; }
-      else { el_.style.backgroundImage="url("+svgFallback+")"; }
+      else {
+        // 最后尝试占位 svg；若也不存在则用内嵌占位图（不依赖外部文件）
+        if(!loadPhoto.__svgTried){
+          loadPhoto.__svgTried = true;
+          var s = new Image();
+          s.onload = function(){ el_.style.backgroundImage="url("+svgFallback+")"; loadPhoto.__svgTried=false; };
+          s.onerror = function(){ el_.style.backgroundImage="url('"+PH_EMPTY+"')"; loadPhoto.__svgTried=false; };
+          s.src = svgFallback;
+        } else {
+          el_.style.backgroundImage="url('"+PH_EMPTY+"')";
+        }
+      }
     };
     img.src = tries[0];
   }
