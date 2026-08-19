@@ -90,6 +90,11 @@
   #editPanel .head h3 { font-size:16px; letter-spacing:.1em; }
   #editPanel .close { color:#ff9db9; font-size:15px; cursor:pointer; padding:4px 8px; }
   #editList { flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; }
+  #editList .eitem{ padding:10px; margin:6px 0; border-radius:10px; background:rgba(255,255,255,.06); transition:background .2s, box-shadow .2s; }
+  #editList .eitem.swap-sel{ background:rgba(255,210,77,.20); box-shadow:0 0 0 2px #ffd24d; }
+  #editList .eitem.swap-target{ background:rgba(120,255,150,.18); box-shadow:0 0 0 2px #78ff96; }
+  #editList .swapBtn{ margin-left:8px; background:rgba(255,210,77,.15); color:#ffd24d; border:1px solid rgba(255,210,77,.5); }
+  #editList .uploadBtn, #editList .swapBtn{ padding:6px 8px; border-radius:8px; font-size:12px; cursor:pointer; }
   .eitem { display:flex; align-items:center; gap:10px; background:#1c1c2e; border-radius:8px;
     padding:8px 10px; margin-bottom:8px; }
   .eitem .thumb { width:46px; height:46px; border-radius:6px; background:#333 center/cover no-repeat; flex:0 0 auto; }
@@ -159,7 +164,8 @@
   <!-- 编辑面板 -->
   <div id="editPanel">
     <div class="head"><h3>编辑照片</h3><span class="close" id="panelClose">关闭</span></div>
-    <div class="panelHint">①点击「📷上传」可从相册选择这张照片（保存在本机，刷新不丢）<br>②填写日期和地点后点「保存」</div>
+    <div class="panelHint">①点击「📷上传」可从相册选择这张照片（保存在本机，刷新不丢）<br>②填写日期和地点后点「保存」<br>③点「🔁互换」可交换两张照片的顺序</div>
+    <div id="swapTip" style="display:none; color:#ffd24d; font-size:12px; padding:6px 2px; text-align:center;"></div>
     <div class="musicBar">
       <span class="musicLabel">🎵 背景音乐：</span>
       <button id="musicUploadBtn">上传</button>
@@ -212,12 +218,16 @@ var PHOTO_INFO = [
   { photo:"30.jpg",  date:"", place:"" }
 ];
 
-// 从 localStorage 载入已编辑的日期/地点（因为 photo 文件名固定，只覆盖 date/place）
+// 从 localStorage 载入已编辑的照片信息（含 photo 文件名、date、place；支持换序后刷新保留）
 try{
   var saved = JSON.parse(localStorage.getItem("qixi_photo_info")||"null");
   if(saved && saved.length===PHOTO_INFO.length){
     for(var si=0;si<PHOTO_INFO.length;si++){
-      if(saved[si]){ PHOTO_INFO[si].date=saved[si].date||""; PHOTO_INFO[si].place=saved[si].place||""; }
+      if(saved[si]){
+        PHOTO_INFO[si] = { photo: saved[si].photo||PHOTO_INFO[si].photo,
+                           date: saved[si].date||"",
+                           place: saved[si].place||"" };
+      }
     }
   }
 }catch(e){}
@@ -351,7 +361,7 @@ function build(){
     fields.innerHTML=
         '<input class="ed-date" placeholder="日期，如 2020.5.20" value="'+ (info2.date||"") +'">'+
         '<div class="row2"><input class="ed-place" placeholder="地点，如 广州塔" value="'+ (info2.place||"") +'"></div>'+
-        '<div class="row2"><button class="uploadBtn" data-up="'+j+'">📷 上传</button><span class="upTip">从相册选这张照片</span></div>';
+        '<div class="row2"><button class="uploadBtn" data-up="'+j+'">📷 上传</button><button class="swapBtn" data-swap="'+j+'">🔁 互换</button></div>';
     // 隐藏的 file input，方案A：支持手机直接从相册选图
     var fileIn = document.createElement("input");
     fileIn.type="file"; fileIn.accept="image/*"; fileIn.style.display="none";
@@ -549,13 +559,86 @@ function step(dir){
 /* （事件绑定统一放到文件底部 build() 之后执行，避免 build 前 el 为空导致报错） */
 
 /* =========================================================
+   照片互换（⚪ 交换两张照片在跑道上的顺序）
+   ========================================================= */
+var swapState = { active:false, from:-1 };
+function swapTipEl(){ return document.getElementById("swapTip"); }
+function clearSwapHighlight(){
+  var items = el.editList.children;
+  for(var i=0;i<items.length;i++){ items[i].classList.remove("swap-sel"); items[i].classList.remove("swap-target"); }
+}
+function beginSwap(idx){
+  // 若已在选择模式且点了同一张，视为取消
+  if(swapState.active && swapState.from===idx){ cancelSwap(); return; }
+  swapState.active = true;
+  swapState.from = idx;
+  clearSwapHighlight();
+  var items = el.editList.children;
+  if(items[idx]) items[idx].classList.add("swap-sel");
+  var tip = swapTipEl();
+  if(tip){ tip.style.display="block"; tip.textContent = "再点另一张照片完成互换（点同一张或「关闭」取消）"; }
+}
+function cancelSwap(){
+  swapState.active=false; swapState.from=-1;
+  clearSwapHighlight();
+  var tip = swapTipEl();
+  if(tip) tip.style.display="none";
+}
+function rebuildSwapVisuals(a,b){
+  var cards = el.runLayer.children;
+  var items = el.editList.children;
+  // 交换互换顺序后，跑道两张照片的 left、背景图、caption、编辑面板缩略图与输入框均应反映新数据
+  // 1) 跑道：互换两张照片的 left（顺序）
+  var la = cards[a].style.left, lb = cards[b].style.left;
+  cards[a].style.left = lb; cards[b].style.left = la;
+  // 2) 跑道背景图
+  var imA = cards[a].querySelector(".img"), imB = cards[b].querySelector(".img");
+  var ba = imA.style.backgroundImage, bb = imB.style.backgroundImage;
+  imA.style.backgroundImage = bb; imB.style.backgroundImage = ba;
+  // 3) 跑道 caption（日期/地点）
+  cards[a].querySelector(".cap").innerHTML = '<b>'+(PHOTO_INFO[a].date||"")+'</b><span>'+(PHOTO_INFO[a].place||"")+'</span>';
+  cards[b].querySelector(".cap").innerHTML = '<b>'+(PHOTO_INFO[b].date||"")+'</b><span>'+(PHOTO_INFO[b].place||"")+'</span>';
+  // 4) 编辑面板缩略图
+  var thA = items[a].querySelector(".thumb"), thB = items[b].querySelector(".thumb");
+  var tbA = thA.style.backgroundImage, tbB = thB.style.backgroundImage;
+  thA.style.backgroundImage = tbB; thB.style.backgroundImage = tbA;
+  // 5) 编辑面板日期/地点输入框
+  var va = items[a], vb = items[b];
+  var da = va.querySelector(".ed-date").value, pa = va.querySelector(".ed-place").value;
+  var db = vb.querySelector(".ed-date").value, pb = vb.querySelector(".ed-place").value;
+  vb.querySelector(".ed-date").value = da; vb.querySelector(".ed-place").value = pa;
+  va.querySelector(".ed-date").value = db; va.querySelector(".ed-place").value = pb;
+}
+function performSwap(a,b){
+  if(a===b){ cancelSwap(); return; }
+  // 1) 交换 PHOTO_INFO 整块（photo+date+place）
+  var t = PHOTO_INFO[a];
+  PHOTO_INFO[a] = PHOTO_INFO[b];
+  PHOTO_INFO[b] = t;
+  // 2) 交换本地上传图（SAVED_IMGS 按序号）
+  var hasA = SAVED_IMGS.hasOwnProperty(a);
+  var hasB = SAVED_IMGS.hasOwnProperty(b);
+  var tmpIm = SAVED_IMGS[a];
+  if(hasB) SAVED_IMGS[a] = SAVED_IMGS[b]; else { delete SAVED_IMGS[a]; }
+  if(hasA) SAVED_IMGS[b] = tmpIm; else { delete SAVED_IMGS[b]; }
+  // 3) 持久化
+  try{ localStorage.setItem("qixi_photo_info", JSON.stringify(PHOTO_INFO)); }catch(e){}
+  try{ localStorage.setItem("qixi_photo_imgs", JSON.stringify(SAVED_IMGS)); }catch(e){}
+  // 4) 更新显示并退出选择模式
+  rebuildSwapVisuals(a,b);
+  cancelSwap();
+  var tip = swapTipEl();
+  if(tip){ tip.style.display="block"; tip.textContent = "✅ 已交换第 "+(a+1)+" 和第 "+(b+1)+" 张，点「保存」后刷新即生效"; }
+}
+
+/* =========================================================
    编辑面板
    ========================================================= */
 function openPanel(){
   el.editPanel.style.display="flex";
 }
 function closePanel(){
-  // 保存到 DOM 上的卡片
+  cancelSwap(); // 关闭时退出互换选择模式
   var items=el.editList.children;
   var cards=el.runLayer.children;
   for(var i=0;i<items.length;i++){
@@ -700,6 +783,19 @@ el.btnMusic.addEventListener("click",musicToggle);
 el.musicUploadBtn.addEventListener("click",function(){ el.musicFile.click(); });
 el.musicFile.addEventListener("change",function(){ handleMusicUpload(el.musicFile); });
 bindUploads();
+// 照片互换按钮绑定（build 后元素已存在）
+(function(){
+  var sw = el.editList.querySelectorAll(".swapBtn");
+  for(var k=0;k<sw.length;k++){
+    (function(btn){
+      btn.addEventListener("click", function(){
+        var idx = parseInt(btn.getAttribute("data-swap"),10);
+        if(!swapState.active){ beginSwap(idx); }
+        else { performSwap(swapState.from, idx); }
+      });
+    })(sw[k]);
+  }
+})();
 refreshMusicStatus();
 </script>
 </body>
