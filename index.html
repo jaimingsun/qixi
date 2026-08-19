@@ -156,7 +156,7 @@
         <div class="ctrlBtn" id="btnNext">▶</div>
         <div class="ctrlBtn" id="btnMusic" title="音乐开关">🎵</div>
         <div id="progress"><div id="barFill"></div></div>
-        <div id="timeTxt">0 / 30</div>
+        <div id="timeTxt">0 / 25</div>
       </div>
     </div>
   </div>
@@ -210,12 +210,7 @@ var PHOTO_INFO = [
   { photo:"22.jpg",  date:"", place:"" },
   { photo:"23.jpg",  date:"", place:"" },
   { photo:"24.jpg",  date:"", place:"" },
-  { photo:"25.jpg",  date:"", place:"" },
-  { photo:"26.jpg",  date:"", place:"" },
-  { photo:"27.jpg",  date:"", place:"" },
-  { photo:"28.jpg",  date:"", place:"" },
-  { photo:"29.jpg",  date:"", place:"" },
-  { photo:"30.jpg",  date:"", place:"" }
+  { photo:"25.jpg",  date:"", place:"" }
 ];
 
 // 从 localStorage 载入已编辑的照片信息（含 photo 文件名、date、place；支持换序后刷新保留）
@@ -273,7 +268,7 @@ var NATURE_BGS = [
 /* =========================================================
    常量
    ========================================================= */
-var TOTAL = 30;               // 照片数量
+var TOTAL = 25;               // 照片数量（5 个阶段 × 每阶段 5 张）
 var PHOTO_W = 150;            // 照片宽度 px（build 时根据屏幕计算）
 var GAP = 150;                // 照片间距 px（build 时根据屏幕计算，默认等于半屏）
 var BOUNCE = 16;              // 弹跳幅度 px
